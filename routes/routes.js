@@ -15,13 +15,20 @@ router.get("/stats", (req, res) => {
 });
 
 router.get("/api/workouts", (req, res) =>
-  db.Workout.find({})
+  db.Workout.aggregate([
+    {
+      $addFields: { totalDuration: { $sum: "$exercises.duration" } },
+    },
+  ])
     .then((workout) => res.json(workout))
     .catch((err) => res.status(400).json(err))
 );
 
-router.put("/api/workouts/:id", ({ body }, res) =>
-  db.Workout.findOneAndUpdate(body)
+router.put("/api/workouts/:id", (req, res) =>
+  db.Workout.findOneAndUpdate(
+    { _id: req.params.id },
+    { $push: { exercises: req.body } }
+  )
     .then((workout) => res.json(workout))
     .catch((err) => res.status(400).json(err))
 );
@@ -33,7 +40,12 @@ router.post("/api/workouts", ({ body }, res) => {
 });
 
 router.get("/api/workouts/range", (req, res) =>
-  db.Workout.find({})
+  db.Workout.aggregate([
+    {
+      $addFields: { totalDuration: { $sum: "$exercises.duration" } },
+    },
+  ])
+    .limit(7)
     .then((workout) => res.json(workout))
     .catch((err) => res.status(400).json(err))
 );
